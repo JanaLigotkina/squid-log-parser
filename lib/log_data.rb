@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 
 class LogData
+  attr_reader :time_stamp, :time_spend_proxy, :ip, :status, :size,
+              :method, :url, :user, :hierarchy_code, :mime_type
+
   def initialize(log_data)
     @time_stamp = log_data[:time_stamp]
     @time_spend_proxy = log_data[:time_spend_proxy]
@@ -12,13 +15,5 @@ class LogData
     @user = log_data[:user]
     @hierarchy_code = log_data[:hierarchy_code]
     @mime_type = log_data[:mime_type]
-  end
-
-  def read_logs
-
-  end
-
-  def get_log_data
-    @log_data
   end
 end
