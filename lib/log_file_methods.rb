@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 
 module LogFileMethods
-  def prepare_logs(file_path, num_days)
-    log_data_array = read_all_logs(file_path)
+  def prepare_logs(full_logs, num_days)
+    @prepare_logs ||= full_logs.select { |log_data| log_data.time_stamp >= (Time.now - num_days*24*60*60).to_date }
+  end
 
-    log_data_array.select! { |log_data| log_data.time_stamp >= (Time.now - num_days*24*60*60).to_date }
-
-    log_data_array
+  def available_dates(full_logs)
+    @available_dates ||= full_logs.map { |log_data| log_data}.uniq(&:time_stamp).map(&:time_stamp)
   end
 
   private

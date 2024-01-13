@@ -27,6 +27,7 @@ class App < Thor
   def parse
     parser = Parser.new(LOG_FILE_PATH, options[:days])
     size = parser.calculate_downloaded_data
+
     say pastel.bold.green("#{size} bytes, #{size/1024} KB, #{size/1024/1024} MB, #{size/1024/1024/1024} GB")
   end
 
