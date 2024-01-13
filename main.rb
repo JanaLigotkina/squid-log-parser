@@ -26,9 +26,11 @@ class App < Thor
 
   def parse
     parser = Parser.new(LOG_FILE_PATH, options[:days])
-    size = parser.calculate_downloaded_data
+    full_size = parser.get_full_data_size(parser.selected_logs)
+    cache_size = parser.get_cache_size(parser.selected_logs)
 
-    say pastel.bold.green("#{size} bytes, #{size/1024} KB, #{size/1024/1024} MB, #{size/1024/1024/1024} GB")
+    say pastel.bold.green("Всего за указанный период:  #{full_size/1024/1024} MB ( #{full_size/1024/1024/1024} GB )")
+    say pastel.bold.red("#{cache_size}")
   end
 
   private

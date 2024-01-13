@@ -13,19 +13,25 @@ class Parser
     @num_days = num_days
   end
 
-  def calculate_downloaded_data
-    sum_selected_logs_size = 0
-    
+  def get_full_data_size(selected_logs)
     if selected_logs.empty?
       puts "No data for the last #{num_days} days"
       puts "Last available date is #{available_dates(full_logs).max.strftime("%d-%m-%Y")}"
-      nil
+      exit
+    else
+      selected_logs.map(&:size).sum
     end
+  end
+
+  def get_cache_size(selected_logs)
+    status_sizes = Hash.new(0)
 
     selected_logs.each do |log|
-      sum_selected_logs_size += log.size
+      if log.status =~ /.*HIT.*200$/
+        status_sizes[log.status] += log.size
+      end
     end
 
-    sum_selected_logs_size
+    status_sizes
   end
 end
