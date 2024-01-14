@@ -17,7 +17,7 @@ module LogFileMethods
 
     lines = File.readlines(file_path)
 
-    lines.each_with_index do |line, index|
+    lines.each do |line|
       line_data = line.split(' ')
 
       log_data[:time_stamp] = Time.at(line_data[0].to_f).to_date
