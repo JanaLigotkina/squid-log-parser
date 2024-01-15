@@ -27,6 +27,10 @@ class Parser
 
   def get_cache_size(selected_logs)
     status_sizes = Hash.new { |hash, key| hash[key] = { description: '', count: 0, size_kb: 0, size_mb: 0 } }
+    special_status_sums = {
+      'TCP_HIT/200 + TCP_MEM_HIT/200' => 0,
+      'TCP_MEM_HIT_ABORTED/200 + TCP_HIT_ABORTED/200' => 0
+    }
 
     selected_logs.each do |log|
       if log.status =~ /.*HIT.*200$/
@@ -34,11 +38,19 @@ class Parser
         status_sizes[log.status][:count] += 1
         status_sizes[log.status][:size_kb] += log.size
         status_sizes[log.status][:size_mb] += (log.size / 1024.0 / 1024.0)
+
+        if ['TCP_HIT/200', 'TCP_MEM_HIT/200'].include?(log.status)
+          special_status_sums['TCP_HIT/200 + TCP_MEM_HIT/200'] += log.size
+        elsif ['TCP_MEM_HIT_ABORTED/200', 'TCP_HIT_ABORTED/200'].include?(log.status)
+          special_status_sums['TCP_MEM_HIT_ABORTED/200 + TCP_HIT_ABORTED/200'] += log.size
+        end
       end
     end
 
     status_sizes.map do |status, data|
       [status, data[:description], data[:count], data[:size_kb], data[:size_mb].round(2)]
+    end + special_status_sums.map do |status, size|
+      [status, 'Special status sum', nil, size, (size / 1024.0 / 1024.0).round(2)]
     end
   end
 
