@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require_relative 'lib/types'
 require_relative 'lib/log_data'
 require_relative 'lib/parser'
 require_relative 'lib/colorful_output'
@@ -13,6 +14,7 @@ gemfile do
 
   ruby ">= 3.0.0"
 
+  gem "dry-struct"
   gem "pastel"
   gem "thor"
   gem "tty-table"
@@ -24,7 +26,6 @@ class App < Thor
   include ColorfulOutput
 
   desc "available_dates", "Show available dates"
-  # use: ruby main.rb available_dates
   def available_dates
     parser = Parser.new(LOG_FILE_PATH, 0)
     dates  = parser.available_dates(parser.full_logs)
@@ -37,8 +38,6 @@ class App < Thor
 
   desc "parse", "Parse log file"
   option :days, type: :numeric, default: 7
-  # use: ruby main.rb parse --days=4
-  # use: ruby main.rb parse (for default 7 days)
   def parse
     parser      = Parser.new(LOG_FILE_PATH, options[:days])
     full_size   = parser.get_full_data_size(parser.selected_logs).to_f
@@ -49,7 +48,7 @@ class App < Thor
     table = TTY::Table.new(
       header:
       [
-       pastel.yellow('Cache Type'), pastel.yellow('Description'), pastel.yellow('Count'),
+       pastel.yellow('Cache Type'), pastel.yellow('Description'), pastel.yellow('Query Count'),
        pastel.yellow('Size (kB)'), pastel.yellow('Size (MB)')
       ]
     )

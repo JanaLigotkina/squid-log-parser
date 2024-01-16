@@ -21,7 +21,7 @@ module LogFileMethods
       line_data = line.split(' ')
 
       log_data[:time_stamp] = Time.at(line_data[0].to_f).to_date
-      log_data[:time_spend_proxy] = line_data[1]
+      log_data[:time_spend_proxy] = line_data[1].to_i
       log_data[:ip] = line_data[2]
       log_data[:status] = line_data[3]
       log_data[:size] = line_data[4].to_i
