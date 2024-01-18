@@ -40,8 +40,7 @@ class App < Thor
   option :days, type: :numeric, default: 7
   def parse
     parser      = Parser.new(LOG_FILE_PATH, options[:days])
-    full_size   = parser.get_full_data_size(parser.filtered_logs).to_f
-    full_size_kb, full_size_mb = parser.convert_to_kb_and_mb(full_size)
+    full_size_kb, full_size_mb = parser.get_full_data_size(parser.filtered_logs)
     cache_sizes = parser.get_cache_size(parser.filtered_logs)
 
     percent_success = parser.calculate_percentage(cache_sizes, 'TCP_HIT + TCP_MEM_HIT', full_size_kb)
@@ -58,7 +57,7 @@ class App < Thor
       table << cache_size
     end
 
-    say pastel.green("Total for the period of #{options[:days]} days:\n#{full_size_kb} kB ( #{full_size_mb.round(2)} MB )\n")
+    say pastel.green("Total for the period of #{options[:days]} days:\n#{full_size_kb} kB / #{full_size_mb.round(2)} MB\n")
     say pastel.green("Percentage of 'TCP_HIT + TCP_MEM_HIT' to total size: #{percent_success}%")
     say pastel.green("Percentage of 'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED' to total size: #{percent_aborted}%")
     say pastel.yellow("Cache sizes for the period of #{options[:days]} days:")

@@ -21,38 +21,57 @@ class Parser
       puts pastel.red("Last available date is #{available_dates(all_logs).max.strftime("%d-%m-%Y")}")
       exit
     else
-      filtered_logs.map(&:size).sum
+      size_sum = filtered_logs.map(&:size).sum
+      convert_to_kb_and_mb(size_sum)
     end
   end
 
   def get_cache_size(filtered_logs)
-    status_sizes = Hash.new { |hash, key| hash[key] = { description: '', count: 0, size_kb: 0, size_mb: 0 } }
-    special_status_sums = {
-      'TCP_HIT + TCP_MEM_HIT' => 0,
-      'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED' => 0
-    }
+    filtered_sizes = create_sizes_hash
+    sum_filtered_sizes = create_sizes_hash
 
     filtered_logs.each do |log|
       if log.status =~ /.*HIT.*200$/
-        status_sizes[log.status][:description] = get_description(log.status)
-        status_sizes[log.status][:count] += 1
-        size_kb, size_mb = convert_to_kb_and_mb(log.size)
-        status_sizes[log.status][:size_kb] += size_kb
-        status_sizes[log.status][:size_mb] += size_mb
+        increment_sizes(filtered_sizes, log.status, log.size, get_description(log.status))
 
         if ['TCP_HIT/200', 'TCP_MEM_HIT/200'].include?(log.status)
-          special_status_sums['TCP_HIT + TCP_MEM_HIT'] += log.size
+          status_for_total_cashe = 'TCP_HIT + TCP_MEM_HIT'
+          increment_sizes(sum_filtered_sizes, status_for_total_cashe, log.size, 'Total cache')
         elsif ['TCP_MEM_HIT_ABORTED/200', 'TCP_HIT_ABORTED/200'].include?(log.status)
-          special_status_sums['TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED'] += log.size
+          status_for_total_aborted = 'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED'
+          increment_sizes(sum_filtered_sizes, status_for_total_aborted, log.size, 'Total aborted')
         end
       end
     end
 
-    status_sizes.map do |status, data|
+    get_array_of_sizes(filtered_sizes, sum_filtered_sizes)
+  end
+
+  def calculate_percentage(cache_sizes, status, full_size_kb)
+    status_size = cache_sizes.find { |cache_size| cache_size[0] == status }[3].to_f
+    percent = (status_size / full_size_kb) * 100
+    percent.round(2)
+  end
+
+  private
+
+  def create_sizes_hash
+    Hash.new { |hash, key| hash[key] = { description: '', count: 0, size_kb: 0, size_mb: 0 } }
+  end
+
+  def increment_sizes(sizes, status, size, description)
+    sizes[status][:description] = description
+    sizes[status][:count] += 1
+    size_kb, size_mb = convert_to_kb_and_mb(size)
+    sizes[status][:size_kb] += size_kb
+    sizes[status][:size_mb] += size_mb
+  end
+
+  def get_array_of_sizes(filtered_sizes, sum_filtered_sizes)
+    filtered_sizes.map do |status, data|
       [status, data[:description], data[:count], data[:size_kb], data[:size_mb].round(2)]
-    end + special_status_sums.map do |status, size|
-      size_kb, size_mb = convert_to_kb_and_mb(size)
-      [status, 'Special status sum', nil, size_kb, size_mb.round(2)]
+    end + sum_filtered_sizes.map do |status, data|
+      [status, data[:description], data[:count], data[:size_kb], data[:size_mb].round(2)]
     end
   end
 
@@ -60,12 +79,6 @@ class Parser
     size_kb = size
     size_mb = (size / 1024.0 / 1024.0)
     [size_kb, size_mb]
-  end
-
-  def calculate_percentage(cache_sizes, status, full_size_kb)
-    status_size = cache_sizes.find { |cache_size| cache_size[0] == status }[3]
-    persent = (status_size / full_size_kb) * 100
-    persent.round(2)
   end
 
   def get_description(status)
