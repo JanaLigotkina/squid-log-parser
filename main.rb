@@ -40,10 +40,12 @@ class App < Thor
   option :days, type: :numeric, default: 7
   def parse
     parser      = Parser.new(LOG_FILE_PATH, options[:days])
-    full_size   = parser.get_full_data_size(parser.selected_logs).to_f
-    full_size_kb = full_size.round(2)
-    full_size_mb = (full_size / 1024 / 1024).round(2)
-    cache_sizes = parser.get_cache_size(parser.selected_logs)
+    full_size   = parser.get_full_data_size(parser.filtered_logs).to_f
+    full_size_kb, full_size_mb = parser.convert_to_kb_and_mb(full_size)
+    cache_sizes = parser.get_cache_size(parser.filtered_logs)
+
+    percent_success = parser.calculate_percentage(cache_sizes, 'TCP_HIT + TCP_MEM_HIT', full_size_kb)
+    percent_aborted = parser.calculate_percentage(cache_sizes, 'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED', full_size_kb)
 
     table = TTY::Table.new(
       header:
@@ -56,7 +58,9 @@ class App < Thor
       table << cache_size
     end
 
-    say pastel.green("Total for the period of #{options[:days]} days:\n#{full_size_kb} kB ( #{full_size_mb} MB )\n")
+    say pastel.green("Total for the period of #{options[:days]} days:\n#{full_size_kb} kB ( #{full_size_mb.round(2)} MB )\n")
+    say pastel.green("Percentage of 'TCP_HIT + TCP_MEM_HIT' to total size: #{percent_success}%")
+    say pastel.green("Percentage of 'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED' to total size: #{percent_aborted}%")
     say pastel.yellow("Cache sizes for the period of #{options[:days]} days:")
     say table.render(:unicode, padding: [0, 1])
   end
