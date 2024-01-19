@@ -93,9 +93,8 @@ class Parser
     end
   end
 
-  def convert_to_kb_and_mb(size)
-    size_kb = size
-    size_mb = (size / 1024.0 / 1024.0)
+  def convert_to_kb_and_mb(size_kb)
+    size_mb = (size_kb / 1024.0)
     [size_kb, size_mb]
   end
 
