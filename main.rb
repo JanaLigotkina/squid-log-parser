@@ -35,7 +35,7 @@ class App < Thor
   desc "available_dates", "Show available dates"
   def available_dates
     parser = Parser.new(LOG_FILE_PATH, 0)
-    dates  = parser.available_dates(parser.full_logs)
+    dates  = parser.available_dates(parser.all_logs)
 
     say pastel.green("Available dates:")
     dates.each do |date|
