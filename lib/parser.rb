@@ -8,11 +8,11 @@ class Parser
   include ColorfulOutput
 
   attr_reader :all_logs, :filtered_logs, :num_days
-  
+
   def initialize(file_path, num_days)
-    @all_logs = read_all_logs(file_path)
+    @all_logs      = read_all_logs(file_path)
     @filtered_logs = prepare_logs(all_logs, num_days)
-    @num_days = num_days
+    @num_days      = num_days
   end
 
   def get_full_data_size(filtered_logs)
@@ -27,9 +27,9 @@ class Parser
   end
 
   def get_cache_size(filtered_logs)
-    filtered_sizes = create_hash
+    filtered_sizes     = create_hash
     sum_filtered_sizes = create_hash
-    full_size_kb = get_full_data_size(filtered_logs)[0]
+    full_size_kb       = get_full_data_size(filtered_logs)[0]
 
     filtered_logs.each do |log|
       if log.status =~ /.*HIT.*200$/
@@ -74,11 +74,11 @@ class Parser
 
   def increase_hash_values(sizes, status, size, description, percent)
     sizes[status][:description] = description
-    sizes[status][:count] += 1
-    size_kb, size_mb = convert_to_kb_and_mb(size)
-    sizes[status][:size_kb] += size_kb
-    sizes[status][:size_mb] += size_mb
-    sizes[status][:percent] += percent
+    sizes[status][:count]       += 1
+    size_kb, size_mb            = convert_to_kb_and_mb(size)
+    sizes[status][:size_kb]     += size_kb
+    sizes[status][:size_mb]     += size_mb
+    sizes[status][:percent]     += percent
   end
 
   def calculate_percentage(size, full_size_kb)
