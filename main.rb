@@ -22,6 +22,13 @@ end
 
 LOG_FILE_PATH = '/Users/jana/Downloads/access.log'.freeze
 
+TCP_HIT = 'TCP_HIT/200'
+TCP_MEM_HIT = 'TCP_MEM_HIT/200'
+TCP_MEM_HIT_ABORTED = 'TCP_MEM_HIT_ABORTED/200'
+TCP_HIT_ABORTED = 'TCP_HIT_ABORTED/200'
+TOTAL_CACHE = 'TCP_HIT + TCP_MEM_HIT'
+TOTAL_ABORTED = 'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED'
+
 class App < Thor
   include ColorfulOutput
 
@@ -41,30 +48,32 @@ class App < Thor
   def parse
     parser      = Parser.new(LOG_FILE_PATH, options[:days])
     full_size_kb, full_size_mb = parser.get_full_data_size(parser.filtered_logs)
-    cache_sizes = parser.get_cache_size(parser.filtered_logs)
+    cache_data = parser.get_cache_size(parser.filtered_logs)
 
-    percent_success = parser.calculate_percentage(cache_sizes, 'TCP_HIT + TCP_MEM_HIT', full_size_kb)
-    percent_aborted = parser.calculate_percentage(cache_sizes, 'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED', full_size_kb)
+    say pastel.yellow("\nTotal for the period of #{options[:days]} days:\n")
+    say pastel.bold.cyan("#{full_size_kb} kB / #{full_size_mb.round(2)} MB\n")
+    say pastel.yellow("Cache sizes for the period of #{options[:days]} days:")
 
-    table = TTY::Table.new(
-      header:
-      [
-       pastel.yellow('Cache Type'), pastel.yellow('Description'), pastel.yellow('Query Count'),
-       pastel.yellow('Size (kB)'), pastel.yellow('Size (MB)')
-      ]
-    )
-    cache_sizes.each do |cache_size|
-      table << cache_size
+    table = create_table(cache_data)
+    say table.render(:unicode, padding: [1, 2, 1, 2])
+  end
+
+  private
+
+  def create_table(cache_data)
+    headers = [
+      pastel.bold.underline.green('Cache Type'), pastel.bold.underline.green('Description'), pastel.bold.underline.green('Query Count'),
+      pastel.bold.underline.green('Size (kB)'), pastel.bold.underline.green('Size (MB)'), pastel.bold.underline.red('Percent')
+    ]
+
+    table = TTY::Table.new(header: headers)
+
+    cache_data.each do |item|
+      table << item
     end
 
-    say pastel.green("Total for the period of #{options[:days]} days:\n#{full_size_kb} kB / #{full_size_mb.round(2)} MB\n")
-    say pastel.green("Percentage of 'TCP_HIT + TCP_MEM_HIT' to total size: #{percent_success}%")
-    say pastel.green("Percentage of 'TCP_MEM_HIT_ABORTED + TCP_HIT_ABORTED' to total size: #{percent_aborted}%")
-    say pastel.yellow("Cache sizes for the period of #{options[:days]} days:")
-    say table.render(:unicode, padding: [0, 1])
+    table
   end
 end
 
 App.start(ARGV)
-
-
