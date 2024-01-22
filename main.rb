@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative 'lib/types'
-require_relative 'lib/log_data'
+require_relative 'lib/log'
 require_relative 'lib/parser'
 require_relative 'lib/colorful_output'
 
@@ -36,8 +36,8 @@ class App < Thor
 
   def available_dates
     parser = Parser.new(LOG_FILE_PATH, 0)
-    dates  = parser.available_dates(parser.all_logs)
-
+    dates  = parser.available_dates(parser.raw_logs)
+    puts dates
     say pastel.green("Available dates:")
     dates.each do |date|
       say pastel.yellow(date.strftime("%d-%m-%Y"))
@@ -49,11 +49,13 @@ class App < Thor
 
   def parse
     parser                     = Parser.new(LOG_FILE_PATH, options[:days])
-    full_size_kb, full_size_mb = parser.get_full_data_size(parser.filtered_logs)
-    cache_data                 = parser.get_cache_size(parser.filtered_logs)
+    filtered_logs              = parser.filtered_logs
+    full_size_kb, full_size_mb = parser.get_full_data_size(filtered_logs)
+    rounded_full_size_mb       = full_size_mb.round(2)
+    cache_data                 = parser.get_cache_size(filtered_logs)
 
     say pastel.yellow("\nTotal for the period of #{options[:days]} days:\n")
-    say pastel.bold.cyan("#{full_size_kb} kB / #{full_size_mb.round(2)} MB\n")
+    say pastel.bold.cyan("#{full_size_kb} kB / #{rounded_full_size_mb} MB\n")
     say pastel.yellow("Cache sizes for the period of #{options[:days]} days:")
 
     table = create_table(cache_data)

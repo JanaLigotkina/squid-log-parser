@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-class LogData < Dry::Struct
-  attribute :time_stamp, Types::Strict::Date
+class Log < Dry::Struct
+  attribute :timestamp, Types::Strict::Date
   attribute :time_spend_proxy, Types::Strict::Integer
   attribute :ip, Types::Strict::String
   attribute :status, Types::Strict::String
